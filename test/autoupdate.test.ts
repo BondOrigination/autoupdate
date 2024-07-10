@@ -26,6 +26,12 @@ jest.mock('../src/config-loader');
 beforeEach(() => {
   jest.resetAllMocks();
   jest.spyOn(config, 'githubToken').mockImplementation(() => 'test-token');
+
+  nock('https://api.github.com:443')
+    .get(`/repos/${owner}/${repo}/branches/${head}`)
+    .reply(200, {
+      protected: false,
+    });
 });
 
 const emptyEvent = {} as WebhookEvent;
