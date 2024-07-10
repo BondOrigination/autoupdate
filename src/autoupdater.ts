@@ -490,9 +490,7 @@ export class AutoUpdater {
             return false;
           }
 
-          if (
-            'status' in e &&
-            (e as octokit.RequestError).status === 404) {
+          if ('status' in e && (e as octokit.RequestError).status === 404) {
             const error = e as Error;
 
             ghCore.error(
