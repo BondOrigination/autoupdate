@@ -244,7 +244,7 @@ export class AutoUpdater {
     }
 
     const mergeComment = this.config.mergeComment();
-    if (mergeComment !== null && mergeComment.length > 0) {
+    if (mergeComment !== null && mergeComment !== undefined && mergeComment.length > 0) {
       await this.octokit.rest.issues.createComment({
         owner: pull.head.repo.owner.login,
         issue_number: pull.number,
@@ -490,7 +490,10 @@ export class AutoUpdater {
             return false;
           }
 
-          if ('status' in e && (e as octokit.RequestError).status === 404) {
+          if (
+            isRequestError(e) &&
+            e.status === 404
+           ) {
             const error = e as Error;
 
             ghCore.error(
