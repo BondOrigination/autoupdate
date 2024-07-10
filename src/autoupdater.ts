@@ -302,6 +302,18 @@ export class AutoUpdater {
       return false;
     }
 
+    ghCore.info('Checking if the PR branch is protected.');
+    const { data: branch } = await this.octokit.rest.repos.getBranch({
+      owner: pull.head.repo.owner.login,
+      repo: pull.head.repo.name,
+      branch: pull.head.ref,
+    });
+
+    if (branch.protected) {
+      ghCore.info('Skipping pull request, pull request branch is protected.');
+      return false;
+    }
+
     // First check if this PR has an excluded label on it and skip further
     // processing if so.
     const excludedLabels = this.config.excludedLabels();
