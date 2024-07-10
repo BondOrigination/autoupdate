@@ -8,9 +8,10 @@ import {
   WebhookEvent,
   WorkflowRunEvent,
   WorkflowDispatchEvent,
-} from '@octokit/webhooks-definitions/schema';
+} from '@octokit/webhooks-types/schema';
 import { ConfigLoader } from './config-loader';
 import { Output } from './Output';
+import { isRequestError } from './helpers/isRequestError';
 
 type PullRequestResponse =
   octokit.Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}']['response'];
@@ -243,7 +244,11 @@ export class AutoUpdater {
     }
 
     const mergeComment = this.config.mergeComment();
-    if (mergeComment !== null && mergeComment.length > 0) {
+    if (
+      mergeComment !== null &&
+      mergeComment !== undefined &&
+      mergeComment.length > 0
+    ) {
       await this.octokit.rest.issues.createComment({
         owner: pull.head.repo.owner.login,
         issue_number: pull.number,
@@ -476,14 +481,12 @@ export class AutoUpdater {
            * probably because we don't have access to it.
            */
           if (
-            'status' in e &&
-            (e as octokit.RequestError).status === 403 &&
+            isRequestError(e) &&
+            e.status === 403 &&
             sourceEventOwner !== mergeOpts.owner
           ) {
-            const error = e as Error;
-
             ghCore.error(
-              `Could not update pull request #${prNumber} due to an authorisation error. This is probably because this pull request is from a fork and the current token does not have write access to the forked repository. Error was: ${error.message}`,
+              `Could not update pull request #${prNumber} due to an authorisation error. This is probably because this pull request is from a fork and the current token does not have write access to the forked repository. Error was: ${e.message}`,
             );
 
             setOutputFn(Output.Conflicted, false);
@@ -491,9 +494,7 @@ export class AutoUpdater {
             return false;
           }
 
-          if (
-            'status' in e &&
-            (e as octokit.RequestError).status === 404) {
+          if (isRequestError(e) && e.status === 404) {
             const error = e as Error;
 
             ghCore.error(
