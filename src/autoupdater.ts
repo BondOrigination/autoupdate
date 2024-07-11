@@ -172,6 +172,7 @@ export class AutoUpdater {
       let pull: PullRequestResponse['data'];
       for (pull of pullsPage.data) {
         ghCore.startGroup(`PR-${pull.number}`);
+        ghCore.debug(`Pull Request object: ${JSON.stringify(pull)}`)
         const isUpdated = await this.update(owner, pull);
         ghCore.endGroup();
 
@@ -289,6 +290,9 @@ export class AutoUpdater {
           basehead: `${pull.head.label}...${pull.base.label}`,
         });
 
+      
+      ghCore.debug(`Comparison object: ${JSON.stringify(comparison)}`)
+
       if (comparison.behind_by === 0) {
         ghCore.info('Skipping pull request, up-to-date with base branch.');
         return false;
@@ -308,6 +312,8 @@ export class AutoUpdater {
       repo: pull.head.repo.name,
       branch: pull.head.ref,
     });
+
+    ghCore.debug(`Head branch object: ${JSON.stringify(head_branch)}`)
 
     if (head_branch.protected) {
       ghCore.info('Skipping pull request, pull request branch is protected.');
@@ -403,6 +409,8 @@ export class AutoUpdater {
         repo: pull.head.repo.name,
         branch: pull.base.ref,
       });
+
+      ghCore.debug(`Base branch object: ${JSON.stringify(base_branch)}`)
 
       if (base_branch.protected) {
         ghCore.info(
