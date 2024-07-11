@@ -31,7 +31,8 @@ beforeEach(() => {
     .get(`/repos/${owner}/${repo}/branches/${head}`)
     .reply(200, {
       protected: false,
-    });
+    })
+    .persist();
 });
 
 const emptyEvent = {} as WebhookEvent;
@@ -449,6 +450,31 @@ describe('test `prNeedsUpdate`', () => {
     expect(getBranch.isDone()).toEqual(true);
     expect(config.pullRequestFilter).toHaveBeenCalled();
     expect(config.excludedLabels).toHaveBeenCalled();
+  });
+
+  test('pull request branch is protected', async () => {
+    nock.cleanAll();
+
+    const comparePr = nock('https://api.github.com:443')
+      .get(`/repos/${owner}/${repo}/compare/${head}...${base}`)
+      .reply(200, {
+        behind_by: 1,
+      });
+
+    const getBranch = nock('https://api.github.com:443')
+      .get(`/repos/${owner}/${repo}/branches/${head}`)
+      .reply(200, {
+        protected: true,
+      });
+
+    const updater = new AutoUpdater(config, emptyEvent);
+    const needsUpdate = await updater.prNeedsUpdate(
+      validPull as unknown as PullRequestResponse['data'],
+    );
+
+    expect(needsUpdate).toEqual(false);
+    expect(comparePr.isDone()).toEqual(true);
+    expect(getBranch.isDone()).toEqual(true);
   });
 
   test('pull request is against branch with auto_merge enabled', async () => {

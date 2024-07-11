@@ -172,6 +172,7 @@ export class AutoUpdater {
       let pull: PullRequestResponse['data'];
       for (pull of pullsPage.data) {
         ghCore.startGroup(`PR-${pull.number}`);
+        ghCore.debug(`Pull Request object: ${JSON.stringify(pull)}`);
         const isUpdated = await this.update(owner, pull);
         ghCore.endGroup();
 
@@ -289,6 +290,8 @@ export class AutoUpdater {
           basehead: `${pull.head.label}...${pull.base.label}`,
         });
 
+      ghCore.debug(`Comparison object: ${JSON.stringify(comparison)}`);
+
       if (comparison.behind_by === 0) {
         ghCore.info('Skipping pull request, up-to-date with base branch.');
         return false;
@@ -302,14 +305,16 @@ export class AutoUpdater {
       return false;
     }
 
-    ghCore.info('Checking if the PR branch is protected.');
-    const { data: branch } = await this.octokit.rest.repos.getBranch({
+    ghCore.info(`Checking if the PR branch '${pull.head.ref}' is protected.`);
+    const { data: head_branch } = await this.octokit.rest.repos.getBranch({
       owner: pull.head.repo.owner.login,
       repo: pull.head.repo.name,
       branch: pull.head.ref,
     });
 
-    if (branch.protected) {
+    ghCore.debug(`Head branch object: ${JSON.stringify(head_branch)}`);
+
+    if (head_branch.protected) {
       ghCore.info('Skipping pull request, pull request branch is protected.');
       return false;
     }
@@ -397,14 +402,18 @@ export class AutoUpdater {
     }
 
     if (prFilter === 'protected') {
-      ghCore.info('Checking if this PR is against a protected branch.');
-      const { data: branch } = await this.octokit.rest.repos.getBranch({
+      ghCore.info(
+        `Checking if this PR is against a protected branch '${pull.base.ref}'.`,
+      );
+      const { data: base_branch } = await this.octokit.rest.repos.getBranch({
         owner: pull.head.repo.owner.login,
         repo: pull.head.repo.name,
         branch: pull.base.ref,
       });
 
-      if (branch.protected) {
+      ghCore.debug(`Base branch object: ${JSON.stringify(base_branch)}`);
+
+      if (base_branch.protected) {
         ghCore.info(
           'Pull request is against a protected branch and is behind base branch.',
         );
@@ -530,6 +539,15 @@ export class AutoUpdater {
               ghCore.error('Merge conflict error trying to update branch');
               throw e;
             }
+          }
+
+          if (e.message.startsWith(`protected branch`)) {
+            ghCore.info(
+              `Unable to merge pull request #${prNumber} due to the branch being protected, skipping update. This is likely due to the pull request being added to the merge queue. Error was: ${e.message}`,
+            );
+
+            setOutputFn(Output.Conflicted, false);
+            return false;
           }
 
           ghCore.error(`Caught error trying to update branch: ${e.message}`);
