@@ -302,14 +302,14 @@ export class AutoUpdater {
       return false;
     }
 
-    ghCore.info('Checking if the PR branch is protected.');
-    const { data: branch } = await this.octokit.rest.repos.getBranch({
+    ghCore.info(`Checking if the PR branch '${pull.head.ref}' is protected.`);
+    const { data: head_branch } = await this.octokit.rest.repos.getBranch({
       owner: pull.head.repo.owner.login,
       repo: pull.head.repo.name,
       branch: pull.head.ref,
     });
 
-    if (branch.protected) {
+    if (head_branch.protected) {
       ghCore.info('Skipping pull request, pull request branch is protected.');
       return false;
     }
@@ -397,14 +397,14 @@ export class AutoUpdater {
     }
 
     if (prFilter === 'protected') {
-      ghCore.info('Checking if this PR is against a protected branch.');
-      const { data: branch } = await this.octokit.rest.repos.getBranch({
+      ghCore.info(`Checking if this PR is against a protected branch '${pull.base.ref}'.`);
+      const { data: base_branch } = await this.octokit.rest.repos.getBranch({
         owner: pull.head.repo.owner.login,
         repo: pull.head.repo.name,
         branch: pull.base.ref,
       });
 
-      if (branch.protected) {
+      if (base_branch.protected) {
         ghCore.info(
           'Pull request is against a protected branch and is behind base branch.',
         );
