@@ -31,7 +31,8 @@ beforeEach(() => {
     .get(`/repos/${owner}/${repo}/branches/${head}`)
     .reply(200, {
       protected: false,
-    }).persist();
+    })
+    .persist();
 });
 
 const emptyEvent = {} as WebhookEvent;

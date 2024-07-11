@@ -172,7 +172,7 @@ export class AutoUpdater {
       let pull: PullRequestResponse['data'];
       for (pull of pullsPage.data) {
         ghCore.startGroup(`PR-${pull.number}`);
-        ghCore.debug(`Pull Request object: ${JSON.stringify(pull)}`)
+        ghCore.debug(`Pull Request object: ${JSON.stringify(pull)}`);
         const isUpdated = await this.update(owner, pull);
         ghCore.endGroup();
 
@@ -290,8 +290,7 @@ export class AutoUpdater {
           basehead: `${pull.head.label}...${pull.base.label}`,
         });
 
-      
-      ghCore.debug(`Comparison object: ${JSON.stringify(comparison)}`)
+      ghCore.debug(`Comparison object: ${JSON.stringify(comparison)}`);
 
       if (comparison.behind_by === 0) {
         ghCore.info('Skipping pull request, up-to-date with base branch.');
@@ -313,7 +312,7 @@ export class AutoUpdater {
       branch: pull.head.ref,
     });
 
-    ghCore.debug(`Head branch object: ${JSON.stringify(head_branch)}`)
+    ghCore.debug(`Head branch object: ${JSON.stringify(head_branch)}`);
 
     if (head_branch.protected) {
       ghCore.info('Skipping pull request, pull request branch is protected.');
@@ -403,14 +402,16 @@ export class AutoUpdater {
     }
 
     if (prFilter === 'protected') {
-      ghCore.info(`Checking if this PR is against a protected branch '${pull.base.ref}'.`);
+      ghCore.info(
+        `Checking if this PR is against a protected branch '${pull.base.ref}'.`,
+      );
       const { data: base_branch } = await this.octokit.rest.repos.getBranch({
         owner: pull.head.repo.owner.login,
         repo: pull.head.repo.name,
         branch: pull.base.ref,
       });
 
-      ghCore.debug(`Base branch object: ${JSON.stringify(base_branch)}`)
+      ghCore.debug(`Base branch object: ${JSON.stringify(base_branch)}`);
 
       if (base_branch.protected) {
         ghCore.info(
@@ -544,7 +545,7 @@ export class AutoUpdater {
             ghCore.info(
               `Unable to merge pull request #${prNumber} due to the branch being protected, skipping update. This is likely due to the pull request being added to the merge queue. Error was: ${e.message}`,
             );
-            
+
             setOutputFn(Output.Conflicted, false);
             return false;
           }
