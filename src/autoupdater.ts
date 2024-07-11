@@ -532,6 +532,15 @@ export class AutoUpdater {
             }
           }
 
+          if (e.message.startsWith(`protected branch`)) {
+            ghCore.info(
+              `Unable to merge pull request #${prNumber} due to the branch being protected, skipping update. This is likely due to the pull request being added to the merge queue. Error was: ${e.message}`,
+            );
+            
+            setOutputFn(Output.Conflicted, false);
+            return false;
+          }
+
           ghCore.error(`Caught error trying to update branch: ${e.message}`);
         }
 
