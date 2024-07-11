@@ -1,0 +1,17 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0
+    hooks:
+      - id: check-json
+      - id: check-merge-conflict
+
+  - repo: local
+    hooks:
+      - id: lint
+        name: lint
+        stages: [commit]
+        language: system
+        types: [javascript, jsx, ts, tsx]
+        entry: yarn run lint:fix
+        pass_filenames: false
+        always_run: true
